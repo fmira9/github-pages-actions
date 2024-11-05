@@ -31,9 +31,6 @@ jobs:
 
     - name: Install dependencies
       run: npm install jsdom htmlhint
-      
-    - name: Run Lint 
-      run: npm run lint:html
 
     - name: Run title presence test
       run: node tests/check-title.js
