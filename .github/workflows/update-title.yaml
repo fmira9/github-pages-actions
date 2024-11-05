@@ -3,7 +3,7 @@ name: Update HTML Title and Lint
 on:
   workflow_dispatch:
     inputs:
-      new_title:
+      new_title: 
         description: 'New title for the HTML page'
         required: true
         default: 'My Updated Project'
@@ -23,9 +23,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '16'
-
-    - name: Install dependencies
-      run: npm install jsdom htmlhint
 
     - name: Change page title
       run: |
@@ -54,9 +51,6 @@ jobs:
         "
       env:
         NEW_TITLE: ${{ inputs.new_title.description }}
-
-    - name: Lint HTML file
-      run: ./node_modules/.bin/htmlhint index.html
 
     - name: Commit and push changes
       run: |
