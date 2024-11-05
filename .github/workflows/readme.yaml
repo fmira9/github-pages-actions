@@ -1,18 +1,48 @@
-node -e "
-const fs = require('fs');
-const { JSDOM } = require('jsdom');
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
-// Load index.html
-const htmlContent = fs.readFileSync('index.html', 'utf-8');
-const dom = new JSDOM(htmlContent);
+permissions:
+  contents: write
+  pages: write
+  id-token: write
 
-// Extract <title> and first <p> as description
-const title = dom.window.document.querySelector('title')?.textContent || 'My Project';
-const description = dom.window.document.querySelector('p')?.textContent || 'Description not available.';
+jobs:
+  generate-readme:
+    runs-on: ubuntu-latest
 
-// Generate README content
-const readmeContent = \`# \${title}\n\n\${description}\n\nThis README was generated automatically from index.html.\`;
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-// Write to README.md
-fs.writeFileSync('README.md', readmeContent);
-"
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Install dependencies
+      run: npm install jsdom
+
+    - name: Generate README.md from index.html
+      run: |
+        node -e "
+        const fs = require('fs');
+        const { JSDOM } = require('jsdom');
+
+        // Load index.html
+        const htmlContent = fs.readFileSync('index.html', 'utf-8');
+        const dom = new JSDOM(htmlContent);
+
+        // Extract <title> and first <p> as description
+        const title = dom.window.document.querySelector('title')?.textContent || 'My Project';
+        const description = dom.window.document.querySelector('p')?.textContent || 'Description not available.';
+
+        // Generate README content
+        const readmeContent = \`# \${title}\n\n\${description}\n\nThis README was generated automatically from index.html.\`;
+
+        // Write to README.md
+        fs.writeFileSync('README.md', readmeContent);
+        "
+
