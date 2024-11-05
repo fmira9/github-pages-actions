@@ -3,7 +3,7 @@ name: Update HTML Title and Lint
 on:
   workflow_dispatch:
     inputs:
-      new_title: 
+      new_title:
         description: 'New title for the HTML page'
         required: true
         default: 'My Updated Project'
@@ -24,29 +24,40 @@ jobs:
       with:
         node-version: '16'
 
+    - name: Install jsdom and htmlhint
+      run: npm install jsdom htmlhint
+      
     - name: Change page title
       run: |
-       node -e "
-        const fs = require('fs');
-        const { JSDOM } = require('jsdom');
-        const newTitle = process.env.NEW_TITLE;
+        node -e "
+        try {
+          const fs = require('fs');
+          const { JSDOM } = require('jsdom');
+          const newTitle = process.env.NEW_TITLE;
 
-        // Load and parse index.html
-        const htmlContent = fs.readFileSync('index.html', 'utf-8');
-        const dom = new JSDOM(htmlContent);
+          // Load and parse index.html
+          const htmlContent = fs.readFileSync('index.html', 'utf-8');
+          const dom = new JSDOM(htmlContent);
 
-        // Update the title in <head>
-        const titleElement = dom.window.document.querySelector('title');
-        if (titleElement) {
-          titleElement.textContent = newTitle;
+          // Update the title in <head>
+          const titleElement = dom.window.document.querySelector('title');
+          if (titleElement) {
+            titleElement.textContent = newTitle;
+          }
+
+          // Write the changes back to index.html
+          fs.writeFileSync('index.html', dom.serialize());
+          console.log('Title successfully updated in index.html');
+        } catch (error) {
+          console.error('Error updating title:', error);
+          process.exit(1);
         }
-
-        // Write the changes back to index.html
-        fs.writeFileSync('index.html', dom.serialize());
         "
       env:
         NEW_TITLE: ${{ inputs.new_title }}
 
+    - name: Lint HTML file
+      run: ./node_modules/.bin/htmlhint index.html
 
     - name: Commit and push changes
       run: |
