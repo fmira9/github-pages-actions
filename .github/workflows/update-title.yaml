@@ -50,7 +50,7 @@ jobs:
         fs.writeFileSync('index.html', dom.serialize());
         "
       env:
-        NEW_TITLE: ${{ inputs.new_title.description }}
+        NEW_TITLE: ${{ inputs.new_title }}
 
     - name: Commit and push changes
       run: |
