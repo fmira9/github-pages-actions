@@ -1,4 +1,4 @@
-name: Update HTML Title and Lint
+name: Validation and Deployment Workflow
 
 on:
   workflow_dispatch:
@@ -17,7 +17,7 @@ permissions:
   id-token: write
 
 jobs:
-  update-title:
+  validation-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,39 +29,42 @@ jobs:
       with:
         node-version: '16'
 
-    - name: Install jsdom and htmlhint
+    - name: Install dependencies
       run: npm install jsdom htmlhint
-      
-    - name: Change page title
+
+    - name: Run HTML linter
+      run: ./node_modules/.bin/htmlhint index.html
+
+    - name: Run title presence test
+      run: node tests/check-title.js
+
+    - name: Change page title (optional step for manual update)
+      if: ${{ github.event_name == 'workflow_dispatch' }}
       run: |
         node -e "
-        try {
-          const fs = require('fs');
-          const { JSDOM } = require('jsdom');
-          const newTitle = process.env.NEW_TITLE;
+        const fs = require('fs');
+        const { JSDOM } = require('jsdom');
+        const newTitle = process.env.NEW_TITLE;
 
-          // Load and parse index.html
-          const htmlContent = fs.readFileSync('index.html', 'utf-8');
-          const dom = new JSDOM(htmlContent);
+        // Load and parse index.html
+        const htmlContent = fs.readFileSync('index.html', 'utf-8');
+        const dom = new JSDOM(htmlContent);
 
-          // Update the title in <head>
-          const titleElement = dom.window.document.querySelector('title');
-          if (titleElement) {
-            titleElement.textContent = newTitle;
-          }
-
-          // Write the changes back to index.html
-          fs.writeFileSync('index.html', dom.serialize());
-          console.log('Title successfully updated in index.html');
-        } catch (error) {
-          console.error('Error updating title:', error);
-          process.exit(1);
+        // Update the title in <head>
+        const titleElement = dom.window.document.querySelector('title');
+        if (titleElement) {
+          titleElement.textContent = newTitle;
         }
+
+        // Write the changes back to index.html
+        fs.writeFileSync('index.html', dom.serialize());
+        console.log('Title successfully updated in index.html');
         "
       env:
         NEW_TITLE: ${{ inputs.new_title }}
 
     - name: Commit and push changes
+      if: ${{ github.event_name == 'workflow_dispatch' }}
       run: |
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -70,3 +73,11 @@ jobs:
         git push
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Deploy to GitHub Pages
+      if: success()
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./public
+
