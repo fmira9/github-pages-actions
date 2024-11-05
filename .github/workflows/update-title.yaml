@@ -53,7 +53,10 @@ jobs:
         fs.writeFileSync('index.html', dom.serialize());
         "
       env:
-        NEW_TITLE: ${{ inputs.new_title }}
+        NEW_TITLE: ${{ inputs.new_title.description }}
+
+    - name: Lint HTML file
+      run: ./node_modules/.bin/htmlhint index.html
 
     - name: Commit and push changes
       run: |
