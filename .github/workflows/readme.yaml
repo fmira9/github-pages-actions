@@ -45,4 +45,13 @@ jobs:
         // Write to README.md
         fs.writeFileSync('README.md', readmeContent);
         "
+        - name: Commit and push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add README.md
+          git commit -m "Auto-generate README.md from index.html"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
