@@ -1,0 +1,36 @@
+name: Blue/Green Deployment Swap
+
+on:
+  workflow_dispatch: # Allows the workflow to be triggered manually
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  blue_green_swap:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Swap index.html and index_v2.html
+      run: |
+        # Backup original files
+        mv index.html index_temp.html
+        mv index_v2.html index.html
+        mv index_temp.html index_v2.html
+        
+        echo "Swapped index.html with index_v2.html"
+
+    - name: Commit and push swapped files
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add index.html index_v2.html
+        git commit -m "Swapped index.html and index_v2.html for Blue/Green Deployment"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
